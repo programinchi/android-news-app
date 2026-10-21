@@ -1,4 +1,7 @@
 package com.example.ch09.ui.news
+import androidx.compose.foundation.background
+import com.example.ch09.data.model.OfflineInfo
+import com.example.ch09.util.formatRelativeTime
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,6 +87,10 @@ fun NewsScreen(
                     selected = uiState.selectedCategory,
                     onCategorySelected = onCategorySelected
                 )
+            }
+
+            uiState.offline?.let { offline ->
+                OfflineBanner(offline)
             }
 
             PullToRefreshBox(
@@ -273,4 +280,45 @@ private fun ScrollableCenter(
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content
     )
+}
+
+@Composable
+private fun OfflineBanner(
+    offline: OfflineInfo
+) {
+
+    val lastUpdated = formatRelativeTime(
+        now = System.currentTimeMillis(),
+        then = offline.cachedAt
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                MaterialTheme.colorScheme.secondaryContainer
+            )
+            .padding(12.dp)
+    ) {
+
+        Text(
+            text = "Menampilkan data offline",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Terakhir diperbarui $lastUpdated",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+
+        Text(
+            text = offline.reason,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
 }

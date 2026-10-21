@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.ch09.data.NewsRepository
 import com.example.ch09.data.model.Article
 import com.example.ch09.data.model.NewsCategory
+import com.example.ch09.data.model.OfflineInfo
 import com.example.ch09.data.toUserMessage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -21,7 +22,8 @@ data class NewsUiState(
     val categories: List<NewsCategory> = NewsCategory.entries,
     val selectedCategory: NewsCategory = NewsCategory.General,
     val query: String = "",
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val offline: OfflineInfo? = null
 ) {
     val isSearching: Boolean
         get() = query.isNotBlank()
@@ -56,6 +58,7 @@ class NewsViewModel(
     }
 
     fun onQueryChange(query: String) {
+
         _uiState.update {
             it.copy(query = query)
         }
@@ -93,7 +96,8 @@ class NewsViewModel(
                 it.copy(
                     isLoading = !isRefresh,
                     isRefreshing = isRefresh,
-                    errorMessage = null
+                    errorMessage = null,
+                    offline = if (isRefresh) it.offline else null
                 )
             }
 
@@ -115,7 +119,8 @@ class NewsViewModel(
                             isLoading = false,
                             isRefreshing = false,
                             articles = feed.articles,
-                            errorMessage = null
+                            errorMessage = null,
+                            offline = feed.offline
                         )
                     }
                 }
@@ -125,7 +130,8 @@ class NewsViewModel(
                             isLoading = false,
                             isRefreshing = false,
                             articles = emptyList(),
-                            errorMessage = error.toUserMessage()
+                            errorMessage = error.toUserMessage(),
+                            offline = null
                         )
                     }
                 }
