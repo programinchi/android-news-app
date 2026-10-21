@@ -10,18 +10,24 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.ch09.MainApplication
 import com.example.ch09.data.model.Article
 
-// Route: satu-satunya bagian yang tahu soal ViewModel dan Context
 @Composable
 fun NewsRoute(
     onArticleClick: (Article) -> Unit
 ) {
-    val app = LocalContext.current.applicationContext as MainApplication
+
+    val app =
+        LocalContext.current.applicationContext as MainApplication
 
     val viewModel: NewsViewModel = viewModel(
         factory = viewModelFactory {
-            initializer { NewsViewModel(app.container.newsRepository) }
+            initializer {
+                NewsViewModel(
+                    repository = app.container.newsRepository
+                )
+            }
         }
     )
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     NewsScreen(
@@ -29,7 +35,7 @@ fun NewsRoute(
         onQueryChange = viewModel::onQueryChange,
         onCategorySelected = viewModel::onCategorySelected,
         onArticleClick = onArticleClick,
-        // TODO [T3.3] Teruskan viewModel::refresh.
+        onRefresh = viewModel::refresh,
         onRetry = viewModel::retry
     )
 }

@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
@@ -29,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,7 +42,6 @@ import com.example.ch09.data.model.Article
 import com.example.ch09.data.model.NewsCategory
 import com.example.ch09.ui.components.ArticleCard
 
-// Screen murni presentasional: hanya menerima state dan callback.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewsScreen(
@@ -47,26 +49,35 @@ fun NewsScreen(
     onQueryChange: (String) -> Unit,
     onCategorySelected: (NewsCategory) -> Unit,
     onArticleClick: (Article) -> Unit,
-    // TODO [T3.2] Tambahkan parameter onRefresh: () -> Unit.
+    onRefresh: () -> Unit,
     onRetry: () -> Unit
 ) {
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text("KabarKini") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("KabarKini") }
+            )
+        }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
         ) {
+
             NewsSearchField(
                 query = uiState.query,
                 onQueryChange = onQueryChange,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 8.dp
+                    )
             )
 
-            // Kategori hanya berlaku untuk headline, disembunyikan saat mencari
             if (!uiState.isSearching) {
                 CategoryRow(
                     categories = uiState.categories,
@@ -75,44 +86,64 @@ fun NewsScreen(
                 )
             }
 
-            // TODO [T4.8] Jika uiState.offline != null, tampilkan banner
-            //   "Menampilkan data offline · diperbarui <formatRelativeTime(...)>"
-            //   beserta alasannya (uiState.offline.reason).
+            PullToRefreshBox(
+                isRefreshing = uiState.isRefreshing,
+                onRefresh = onRefresh,
+                modifier = Modifier.fillMaxSize()
+            ) {
 
-            // TODO [T3.2] Bungkus `when` di bawah dengan PullToRefreshBox(
-            //   isRefreshing = uiState.isRefreshing, onRefresh = onRefresh).
-            Box(modifier = Modifier.fillMaxSize()) {
                 when {
-                    uiState.isLoading -> Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+
+                    uiState.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
 
-                    uiState.errorMessage != null -> ErrorState(
-                        message = uiState.errorMessage,
-                        onRetry = onRetry
-                    )
+                    uiState.errorMessage != null -> {
+                        ErrorState(
+                            message = uiState.errorMessage,
+                            onRetry = onRetry
+                        )
+                    }
 
-                    uiState.articles.isEmpty() -> CenteredMessage(
-                        if (uiState.isSearching) "Tidak ada berita untuk \"${uiState.query.trim()}\"."
-                        else "Tidak ada berita ditemukan."
-                    )
+                    uiState.articles.isEmpty() -> {
+                        val message = if (uiState.isSearching) {
+                            "Tidak ada berita untuk \"${uiState.query.trim()}\"."
+                        } else {
+                            "Tidak ada berita ditemukan."
+                        }
+
+                        CenteredMessage(message)
+                    }
 
                     else -> {
-                        // Waktu "sekarang" dihitung ulang setiap daftar berubah
-                        val now = remember(uiState.articles) { System.currentTimeMillis() }
+
+                        val now = remember(uiState.articles) {
+                            System.currentTimeMillis()
+                        }
+
                         LazyColumn(
                             contentPadding = PaddingValues(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalArrangement =
+                                Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(uiState.articles, key = { it.url }) { article ->
+
+                            items(
+                                items = uiState.articles,
+                                key = { it.url }
+                            ) { article ->
+
                                 ArticleCard(
                                     article = article,
                                     now = now,
-                                    onClick = { onArticleClick(article) }
+                                    onClick = {
+                                        onArticleClick(article)
+                                    }
                                 )
                             }
                         }
@@ -123,7 +154,6 @@ fun NewsScreen(
     }
 }
 
-// TextField hanya melaporkan teks; debounce dan pemanggilan API ada di ViewModel.
 @Composable
 private fun NewsSearchField(
     query: String,
@@ -134,12 +164,24 @@ private fun NewsSearchField(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier,
-        placeholder = { Text("Cari berita...") },
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+        placeholder = {
+            Text("Cari berita...")
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null
+            )
+        },
         trailingIcon = {
             if (query.isNotEmpty()) {
-                IconButton(onClick = { onQueryChange("") }) {
-                    Icon(Icons.Filled.Clear, contentDescription = "Hapus pencarian")
+                IconButton(
+                    onClick = { onQueryChange("") }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Clear,
+                        contentDescription = "Hapus pencarian"
+                    )
                 }
             }
         },
@@ -153,34 +195,57 @@ private fun CategoryRow(
     selected: NewsCategory,
     onCategorySelected: (NewsCategory) -> Unit
 ) {
+
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(bottom = 8.dp)
     ) {
-        items(categories, key = { it.apiValue }) { category ->
+
+        items(
+            items = categories,
+            key = { it.apiValue }
+        ) { category ->
+
             FilterChip(
                 selected = category == selected,
-                onClick = { onCategorySelected(category) },
-                label = { Text(category.label) }
+                onClick = {
+                    onCategorySelected(category)
+                },
+                label = {
+                    Text(category.label)
+                }
             )
         }
     }
 }
 
 @Composable
-private fun ErrorState(message: String, onRetry: () -> Unit) {
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit
+) {
     ScrollableCenter {
+
         Icon(
-            Icons.Filled.WifiOff,
+            imageVector = Icons.Filled.WifiOff,
             contentDescription = null,
             modifier = Modifier.size(48.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
         Spacer(Modifier.height(16.dp))
-        Text(message, textAlign = TextAlign.Center)
+
+        Text(
+            text = message,
+            textAlign = TextAlign.Center
+        )
+
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onRetry) { Text("Coba Lagi") }
+
+        Button(onClick = onRetry) {
+            Text("Coba Lagi")
+        }
     }
 }
 
@@ -195,15 +260,14 @@ private fun CenteredMessage(text: String) {
     }
 }
 
-// TODO [T3.2] Pull-to-refresh hanya bereaksi pada konten yang bisa di-scroll.
-//   Agar layar error/kosong juga bisa ditarik, tambahkan verticalScroll. Hati-hati:
-//   verticalScroll membuat tinggi tak terbatas, sehingga Arrangement.Center tidak
-//   lagi menengahkan isi. Petunjuk: BoxWithConstraints + heightIn(min = maxHeight).
 @Composable
-private fun ScrollableCenter(content: @Composable ColumnScope.() -> Unit) {
+private fun ScrollableCenter(
+    content: @Composable ColumnScope.() -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
