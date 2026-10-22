@@ -12,6 +12,7 @@ import com.example.ch10.data.remote.NewsApiService
 import com.example.ch10.data.remote.dto.NewsResponseDto
 import com.example.ch10.util.Clock
 import kotlin.coroutines.cancellation.CancellationException
+import javax.inject.Inject
 
 // Kunci cache untuk hasil pencarian terakhir (bukan nama kategori NewsAPI)
 const val SEARCH_CACHE_KEY = "__search__"
@@ -28,7 +29,7 @@ interface NewsRepository {
 //  - Gagal    -> tampilkan cache Room + info "offline"; jika cache kosong, gagal.
 //
 // TODO [T1.5] Tambahkan @Inject constructor agar Hilt tahu cara membuat class ini.
-class NewsRepositoryImpl(
+class NewsRepositoryImpl @Inject constructor(
     private val api: NewsApiService,
     private val dao: ArticleDao,
     private val clock: Clock
