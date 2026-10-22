@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Ch09KabarKiniStarter"
+rootProject.name = "Ch10KabarKini"
 include(":app")

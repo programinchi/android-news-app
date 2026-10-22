@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.serialization")   // @Serializable (DTO)
+    id("com.google.dagger.hilt.android")              // Hilt (Chapter 10)
 }
 
 // API key dibaca dari local.properties (TIDAK di-commit), bukan ditulis di kode.
@@ -19,17 +20,20 @@ val newsApiKey: String = localProperties.getProperty("NEWS_API_KEY")
     ?: ""
 
 android {
-    namespace  = "com.example.ch09"
+    namespace  = "com.example.ch10"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.ch09"
+        applicationId = "com.example.ch10"
         minSdk        = 24
         targetSdk     = 34
         versionCode   = 1
         versionName   = "1.0"
 
         buildConfigField("String", "NEWS_API_KEY", "\"$newsApiKey\"")
+
+        // Tugas 4: runner khusus yang memakai HiltTestApplication
+        testInstrumentationRunner = "com.example.ch10.HiltTestRunner"
     }
 
     buildTypes {
@@ -106,6 +110,13 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
+    // Hilt (Chapter 10). Compiler-nya lewat KSP, sama seperti Room.
+    val hiltVersion = "2.51.1"
+    implementation("com.google.dagger:hilt-android:$hiltVersion")
+    ksp("com.google.dagger:hilt-android-compiler:$hiltVersion")
+    // hiltViewModel() untuk Composable di dalam NavHost
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
@@ -113,4 +124,14 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    // MockK: membuat mock repository (Tugas 3)
+    testImplementation("io.mockk:mockk:1.13.10")
+
+    // Uji instrumented dengan Hilt + @TestInstallIn (Tugas 4)
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation(composeBom)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
+    kspAndroidTest("com.google.dagger:hilt-android-compiler:$hiltVersion")
 }
