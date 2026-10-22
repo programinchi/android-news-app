@@ -16,17 +16,7 @@ import org.junit.Test
 import java.io.IOException
 import javax.inject.Inject
 
-// Uji end-to-end aplikasi SUNGGUHAN (MainActivity, NavHost, hiltViewModel),
-// tetapi datanya dari FakeNewsRepository berkat @TestInstallIn.
-// Jalankan: ./gradlew connectedDebugAndroidTest (butuh emulator/perangkat)
-//
-// File ini TIDAK perlu diubah. Ketiga tes baru hijau setelah:
-//  - Tugas 1 selesai (MainActivity @AndroidEntryPoint, ViewModel @HiltViewModel), dan
-// TODO [T4.1] buat di/FakeRepositoryModule.kt di folder androidTest:
-//  @Module + @TestInstallIn(components = [SingletonComponent::class],
-//  replaces = [RepositoryModule::class]) yang mem-@Binds FakeNewsRepository
-//  sebagai NewsRepository. Tanpa module itu, aplikasi memakai repository asli
-//  (internet + API key) dan tes gagal.
+
 @HiltAndroidTest
 class NewsAppHiltTest {
 
