@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 // Jeda sebelum mencari: NewsAPI gratis dibatasi 100 request/hari,
 // jadi JANGAN memanggil API untuk setiap huruf yang diketik.
@@ -35,7 +37,8 @@ data class NewsUiState(
 }
 
 // TODO [T1.6] Tandai dengan @HiltViewModel dan tambahkan @Inject constructor.
-class NewsViewModel(
+@HiltViewModel
+class NewsViewModel @Inject constructor(
     private val repository: NewsRepository
 ) : ViewModel() {
 
